@@ -31,7 +31,7 @@ import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.mapview.MapView
 
-const val mapZoom = 0.00003
+const val mapZoom = 0.00001
 
 enum class TrackState {
     START,
@@ -158,7 +158,7 @@ fun NewTrackMap(
                 MapView(it)
             },
             update = { mapView ->
-                mapView.mapWindow.map.apply {
+                    mapView.mapWindow.map.apply {
                     if (locations.isNotEmpty()) {
                         val pl = Polyline(locations.map { loc ->
                             Point(
@@ -167,8 +167,15 @@ fun NewTrackMap(
                             )
                         })
 
+                        var cameraGeometry = Geometry.fromPolyline(pl)
+                        if (pl.points.size > 1) {
+                            cameraGeometry = calcCameraPosZoomed(
+                                pl.points.subList(pl.points.size - 2, pl.points.size)
+                            )
+                        }
+
                         move(
-                            cameraPosition(calcCameraPosZoomed(pl.points)),
+                            cameraPosition(cameraGeometry),
                             Animation(Animation.Type.SMOOTH, 1f),
                             null
                         )

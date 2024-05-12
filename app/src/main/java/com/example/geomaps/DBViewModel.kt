@@ -74,12 +74,14 @@ class DBViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             trackDao.insert(trackName, LocalDateTime.now())
             selectTrack(trackDao.getByName(trackName).first())
-            coordinateDao.insert(
-                selectedTrack!!.id,
-                startPoint.latitude,
-                startPoint.longitude,
-                LocalDateTime.now()
-            )
+            selectedTrack!!.let { track ->
+                coordinateDao.insert(
+                    track.id,
+                    startPoint.latitude,
+                    startPoint.longitude,
+                    track.startDt
+                )
+            }
         }
         return true
     }

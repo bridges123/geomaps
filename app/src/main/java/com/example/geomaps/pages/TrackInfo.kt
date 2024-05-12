@@ -15,12 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.util.rangeTo
 import androidx.navigation.NavController
 import com.example.geomaps.database.entity.Coordinate
 import com.example.geomaps.database.entity.Track
 import com.yandex.mapkit.geometry.Point
 import com.yandex.mapkit.geometry.Polyline
 import com.yandex.mapkit.mapview.MapView
+import java.time.Duration
 import kotlin.math.acos
 import kotlin.math.cos
 import kotlin.math.sin
@@ -35,12 +37,28 @@ fun TrackInfo(
     onRenameTrack: (String) -> Unit,
 ) {
     track?.let {
+        val dist = calcTrackDistance(coordinates)
+        val distFormatted =
+            if (dist < 1) "%.2f м".format(dist * 1000) else "%.2f км".format(dist)
+
+        val duration = Duration.between(track.startDt, track.finishDt)
+        var durationFormatted = "%d сек".format(duration.seconds)
+        if (duration.seconds >= 60) {
+            durationFormatted = "%d мин".format(duration.toMinutes())
+            if (duration.seconds >= 60 * 60) {
+                durationFormatted = "%d ч".format(duration.toHours())
+                if (duration.seconds >= 60 * 60 * 24) {
+                    durationFormatted = "%d д".format(duration.toHours() / 24)
+                }
+            }
+        }
+
         Scaffold(
             bottomBar = {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(0.dp, 0.dp, 0.dp, 20.dp),
+                        .padding(0.dp, 20.dp),
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
                     Button(modifier = Modifier
@@ -75,17 +93,17 @@ fun TrackInfo(
                         text = track.name,
                     )
                 }
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    val dist = calcTrackDistance(coordinates)
-                    val distFormatted =
-                        if (dist < 1) "%.2f м".format(dist * 1000) else "%.2f км".format(dist)
 
-                    Text(
-                        modifier = Modifier.padding(start = 20.dp, bottom = 20.dp),
-                        fontSize = 8.em,
-                        text = "Пройденное расстояние: $distFormatted",
-                    )
-                }
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, bottom = 20.dp),
+                    fontSize = 8.em,
+                    text = "Расстояние: $distFormatted",
+                )
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, bottom = 20.dp),
+                    fontSize = 8.em,
+                    text = "Длительность: $durationFormatted",
+                )
                 TrackMap(
                     modifier,
                     coordinates,
